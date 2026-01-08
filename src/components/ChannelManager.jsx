@@ -35,28 +35,34 @@ const DraggableItem = ({ channel, index, editingId, setEditingId, updateChannel,
                 {/* Content */}
                 <div className="flex-1 min-w-0 py-1">
                     {isEditing ? (
-                        <div className="grid grid-cols-2 gap-2 text-sm pr-2">
-                            <input
-                                type="text"
-                                value={channel.name}
-                                onChange={(e) => updateChannel(channel.id, 'name', e.target.value)}
-                                placeholder="Channel Name"
-                                className="bg-black border border-zinc-700 rounded px-2 py-1 text-white focus:border-blue-500 outline-none"
-                            />
+                        <div className="flex flex-col gap-2 pr-2">
+                            {/* Primary Input: ID/URL */}
                             <input
                                 type="text"
                                 value={channel.videoId}
                                 onChange={(e) => handleSmartInput(channel.id, e.target.value, 'videoId')}
-                                placeholder="YouTube ID or URL"
-                                className="bg-black border border-zinc-700 rounded px-2 py-1 text-white font-mono focus:border-blue-500 outline-none"
+                                placeholder="Paste YouTube Link or ID (Auto-Complete)"
+                                className="bg-black border border-blue-500/50 rounded px-3 py-2 text-white font-mono text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-500/50 outline-none w-full shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-all"
+                                autoFocus
                             />
-                            <input
-                                type="text"
-                                value={channel.logo || ''}
-                                onChange={(e) => updateChannel(channel.id, 'logo', e.target.value)}
-                                placeholder="Logo URL"
-                                className="bg-black border border-zinc-700 rounded px-2 py-1 text-white col-span-2 text-xs focus:border-blue-500 outline-none"
-                            />
+
+                            {/* Secondary Inputs: Name & Logo (Visually Demoted) */}
+                            <div className="grid grid-cols-2 gap-2 opacity-60 hover:opacity-100 transition-opacity">
+                                <input
+                                    type="text"
+                                    value={channel.name}
+                                    onChange={(e) => updateChannel(channel.id, 'name', e.target.value)}
+                                    placeholder="Channel Name (Auto-filled)"
+                                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-white/80 text-xs focus:border-zinc-600 outline-none"
+                                />
+                                <input
+                                    type="text"
+                                    value={channel.logo || ''}
+                                    onChange={(e) => updateChannel(channel.id, 'logo', e.target.value)}
+                                    placeholder="Logo URL (Optional)"
+                                    className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-white/80 text-xs focus:border-zinc-600 outline-none"
+                                />
+                            </div>
                         </div>
                     ) : (
                         <div className="flex items-center gap-3">
@@ -155,7 +161,7 @@ const ChannelManager = ({ onClose }) => {
     };
 
     const updateChannel = (id, field, value) => {
-        setChannels(channels.map(c =>
+        setChannels(prev => prev.map(c =>
             c.id === id ? { ...c, [field]: value } : c
         ));
         setIsDirty(true);
@@ -175,8 +181,29 @@ const ChannelManager = ({ onClose }) => {
                 // It's a URL, use the ID
                 updateChannel(id, 'videoId', extractedId);
 
-                // Auto-fill logo if empty
-                // REMOVED: Bad UX to use video thumbnail as channel logo
+                // Auto-fetch Title via generic OEmbed (client-side)
+                const url = `https://www.youtube.com/watch?v=${extractedId}`;
+                fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        // DEBUG: Temporary alert to see what we got
+                        // alert(`Debug: Fetched ${data.title} \n Author: ${data.author_name}`);
+
+                        if (data.author_name) {
+                            console.log("Auto-filling name:", data.author_name);
+                            updateChannel(id, 'name', data.author_name);
+                        } else if (data.title) {
+                            // Fallback to title if author is missing, but warn user
+                            console.log("Fallback to title:", data.title);
+                            updateChannel(id, 'name', data.title);
+                        } else {
+                            console.warn("No metadata found", data);
+                        }
+                    })
+                    .catch(e => {
+                        console.error("Auto-fetch failed", e);
+                        // alert("Auto-fetch error: " + e.message);
+                    });
                 return;
             }
         }

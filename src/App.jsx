@@ -6,8 +6,6 @@ import ChannelManager from './components/ChannelManager';
 import ProgramGuide from './components/ProgramGuide';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Settings } from 'lucide-react';
 
-
-
 function App() {
   const [channels, setChannels] = useState(() => channelStore.getChannels());
   const [currentChannelIndex, setCurrentChannelIndex] = useState(0);
@@ -15,6 +13,7 @@ function App() {
   const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [guideSelectedIndex, setGuideSelectedIndex] = useState(0);
+  const [isLiveStream, setIsLiveStream] = useState(true); // Default to true, update on metadata
   const [isMuted, setIsMuted] = useState(true);
   const osdTimeoutRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
@@ -47,6 +46,7 @@ function App() {
   const changeChannel = useCallback((direction) => {
     setError(null); // Reset error on channel change
     setIsLoading(true); // Show loading indicator
+    setIsLiveStream(true); // Default to true (Optimistic Live)
 
     // Clear existing loading timeout
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
@@ -71,6 +71,7 @@ function App() {
 
     setError(null);
     setIsLoading(true);
+    setIsLiveStream(true); // Default to true (Optimistic Live)
 
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     loadingTimeoutRef.current = setTimeout(() => {
@@ -104,6 +105,11 @@ function App() {
   const handleBufferEnd = () => {
     setIsLoading(false);
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+  };
+
+  const handleDuration = (duration) => {
+    // If duration is Infinity, it's a live stream.
+    setIsLiveStream(duration === Infinity);
   };
 
   // Handle Keyboard Input
@@ -195,7 +201,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [changeChannel, showOSD, jumpToChannel, isGuideOpen, guideSelectedIndex, channels, setIsGuideOpen]); // Added all dependencies
+  }, [changeChannel, showOSD, jumpToChannel, isGuideOpen, guideSelectedIndex, channels, setIsGuideOpen, currentChannelIndex, toggleFullScreen]);
 
   // Listen for channel updates
   useEffect(() => {
@@ -235,12 +241,14 @@ function App() {
         onError={handlePlayerError}
         onBuffer={handleBuffer}
         onBufferEnd={handleBufferEnd}
+        onDuration={handleDuration}
       />
 
       <OSD
         channel={currentChannel}
         isVisible={isOSDVisible || !!error} // Always show OSD if there is an error
         isMuted={isMuted}
+        isLive={isLiveStream}
         channelNumber={currentChannelIndex + 1}
         totalChannels={channels.length}
       />
@@ -353,5 +361,4 @@ function App() {
   );
 }
 
-// End of component
 export default App;

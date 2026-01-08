@@ -35,13 +35,13 @@ async function updateChannels() {
     // This regex finds the videoId and channelUrl for each entry
     // match[1] = videoId value
     // match[2] = channelUrl value
-    // Updated regex to handle comments or extra text between videoId and channelUrl
-    // match[1] = videoId
-    // match[2] = channelUrl
-    // Updated regex to capture enough context to find the logo field later
-    // Updated regex to capture enough context to find the logo field later
-    // We use [\s\S]*? to match any character (including newlines and comments) between fields non-greedily.
-    const regex = /videoId:\s*"([^"]+)",[\s\S]*?channelUrl:\s*"([^"]+)",[\s\S]*?category:\s*"([^"]+)",[\s\S]*?description:\s*"([^"]+)"/g;
+    // Updated regex to capture 'name' and allow empty strings for videoId/name to support auto-fill.
+    // Group 1: id (numeric) - we need to preserve or capture it to find the start
+    // Group 2: name
+    // Group 3: videoId
+    // Group 4: channelUrl
+    // We strictly follow the file structure: id -> name -> videoId -> channelUrl
+    const regex = /id:\s*(\d+),[\s\S]*?name:\s*"([^"]*)",[\s\S]*?videoId:\s*"([^"]*)",[\s\S]*?channelUrl:\s*"([^"]+)"/g;
 
     let match;
     let updates = 0;
@@ -51,10 +51,10 @@ async function updateChannels() {
     while ((match = regex.exec(fileContent)) !== null) {
         matches.push({
             fullMatch: match[0],
-            currentVideoId: match[1],
-            channelUrl: match[2],
-            category: match[3],
-            description: match[4],
+            id: match[1],
+            currentName: match[2],
+            currentVideoId: match[3],
+            channelUrl: match[4],
             index: match.index
         });
     }
@@ -68,33 +68,98 @@ async function updateChannels() {
 
     // 2. Process each channel
     for (const item of matches) {
-        console.log(`\n🔍 Checking: ${item.channelUrl}`);
+        console.log(`\n🔍 Checking: ${item.channelUrl} (ID: ${item.id})`);
 
         try {
             console.log(`   ...Fetching metadata for ${item.channelUrl}`);
 
-            // 1. Get Video ID (existing logic)
-            // Wrap in try-catch so we don't skip icon fetching if this fails
+            // 1. Get Video ID & Channel Title
             let newVideoId = null;
-            try {
-                const { stdout: videoIdOut } = await execAsync(`yt-dlp --print id --flat-playlist "${item.channelUrl}"`);
-                newVideoId = videoIdOut.trim();
+            let newTitle = null;
 
+            try {
+                // Fetch ID and Channel Title in one go using python output template? Or separate calls.
+                // --print "%(id)s::%(channel)s" 
+                const { stdout: metadataOut } = await execAsync(`yt-dlp --print "%(id)s::%(channel)s" --flat-playlist "${item.channelUrl}"`);
+                const parts = metadataOut.trim().split('::');
+
+                if (parts.length >= 1) newVideoId = parts[0];
+                if (parts.length >= 2) newTitle = parts[1];
+
+                // Update Video ID
                 if (!newVideoId) {
                     console.warn(`   ⚠️ Could not retrieve ID for ${item.channelUrl}`);
                 } else if (newVideoId !== item.currentVideoId) {
-                    console.log(`   🔄 Video ID update needed: ${item.currentVideoId} -> ${newVideoId}`);
-                    // Replace videoId in file content
-                    fileContent = fileContent.replace(
-                        `videoId: "${item.currentVideoId}"`,
-                        `videoId: "${newVideoId}"`
-                    );
-                    updates++;
+                    console.log(`   🔄 Video ID update needed: "${item.currentVideoId}" -> "${newVideoId}"`);
+                    // We use specific enough replacement strings based on the item context
+                    // To be safe, we replace the specific `videoId: "old"` inside the known text area if possible
+                    // But global string replace of `videoId: "VALUE"` is risky if values duplicate.
+                    // Let's use the unique channelUrl as an anchor or just simpler replace if unique.
+
+                    // Specific partial limit replacement isn't easy with simple .replace.
+                    // Given our file structure is repetitive, we should generate a specific search/replace pair.
+
+                    // Strategy: construct the distinct OLD substring and NEW substring
+                    const oldStr = `videoId: "${item.currentVideoId}",\n        channelUrl: "${item.channelUrl}"`;
+                    const newStr = `videoId: "${newVideoId}",\n        channelUrl: "${item.channelUrl}"`;
+
+                    // Fallback for "empty" video ID (different whitespace/linebreaks might exist)
+                    // If currentVideoId is empty string, regex matched `videoId: "",`
+
+                    if (fileContent.includes(oldStr)) {
+                        fileContent = fileContent.replace(oldStr, newStr);
+                        updates++;
+                    } else {
+                        // Fallback: try replace based on exact regex match text?
+                        // The regex includes intervening text.
+                        // Let's use a targeted Regex for rewrite.
+                        const targetRegex = new RegExp(`videoId:\\s*"${item.currentVideoId}"(,[\\s\\S]*?channelUrl:\\s*"${item.channelUrl.replace(/\//g, '\\/')}")`);
+                        fileContent = fileContent.replace(targetRegex, `videoId: "${newVideoId}"$1`);
+                        updates++;
+                    }
                 } else {
                     console.log(`   ✅ Video ID is current.`);
                 }
+
+                // Update Channel Title (Name)
+                if (newTitle) {
+                    // Check if name is empty or placeholder "New Channel" or just different?
+                    // User asked for "auto complete", imply filling if missing. 
+                    // But maybe we should always sync it to official name? 
+                    // Let's autosync if current is empty OR it looks like a placeholder.
+                    // Or just always sync? User might want custom names.
+                    // Compromise: Sync if current name is empty, "New Channel", or explicitly requested.
+                    // The user request said "fill in channel title info automatically".
+                    // Let's just update it if it's different.
+
+                    if (item.currentName !== newTitle && item.currentName !== "") {
+                        // If user set a custom name, do we overwrite? 
+                        // "Yahoo Finance" vs "Yahoo Finance"
+                        // Maybe only if current is empty or looks like a placeholder?
+                        // User said "automatically complete channel title", implies it wasn't there.
+                        // Let's overwrite if it's not equal to the fetched one.
+                    }
+
+                    if (item.currentName === "" || item.currentName === "New Channel" || item.currentName !== newTitle) {
+                        // Wait, forcing update might annoy user if they customized "Sky News UK" vs "Sky News".
+                        // Let's strict it: Only update if current is empty OR if user specifically wants full sync.
+                        // For now, let's update if it's "New Channel" OR empty.
+                        // AND let's update if the user current name is just slightly off? No.
+                        // Let's enable "Smart Fill": If name is empty string, fill it.
+
+                        const shouldUpdateName = (item.currentName === "" || item.currentName === "New Channel");
+
+                        if (shouldUpdateName) {
+                            console.log(`   🏷️  Auto-filling Name: "${item.currentName}" -> "${newTitle}"`);
+                            const nameRegex = new RegExp(`name:\\s*"${item.currentName}"(,[\\s\\S]*?videoId:\\s*"${newVideoId || item.currentVideoId}")`);
+                            fileContent = fileContent.replace(nameRegex, `name: "${newTitle}"$1`);
+                            updates++;
+                        }
+                    }
+                }
+
             } catch (err) {
-                console.warn(`   ⚠️ ID check failed for ${item.channelUrl} (channel might be offline). Continuing to icon check...`);
+                console.warn(`   ⚠️ ID/Title check failed for ${item.channelUrl} (channel might be offline). Continuing to icon check...`);
             }
 
             // 2. Get Channel Icon (New Logic: Fetch from Watch Page)
@@ -113,34 +178,35 @@ async function updateChannels() {
             // valid patterns: 
             // https://yt3.ggpht.com/[A-Za-z0-9_-]+=[sS][0-9]+.*
 
-            const iconRegex = /(https:\/\/yt3\.ggpht\.com\/[A-Za-z0-9_-]+=s[0-9]+-[^"]+)/g;
-            const iconMatches = pageHtml.match(iconRegex);
+            // NEW LOGIC: Target "videoOwnerRenderer" specifically to avoid grabbing commenter avatars.
+            // Pattern: "videoOwnerRenderer":{..."thumbnail":{"thumbnails":[{"url":"..."
+            // We look for the url inside videoOwnerRenderer.
 
-            if (iconMatches && iconMatches.length > 0) {
-                // Sort by size if possible? or just pick the first distinct one. 
-                // Usually the first one in the metadata is good.
-                // Let's filter for one that looks like a profile photo (usually square, s48/s88/s176).
+            // Regex to find the owner thumbnail block. 
+            // We match 'videoOwnerRenderer' then scan ahead to 'thumbnails' array and grab the first 'url'.
+            const ownerAvatarRegex = /"videoOwnerRenderer":[\s\S]*?"thumbnails":\[\{\s*"url":\s*"(https:\/\/yt3\.ggpht\.com\/[^"]+)"/;
+            const ownerMatch = pageHtml.match(ownerAvatarRegex);
 
-                // We'll verify it's not a comment user's avatar (which are also yt3.ggpht).
-                // The channel owner's avatar usually appears early in the metadata or strictly associated with owner JSON.
-                // However, simple scraping:
-                // The "owner" icon is usually larger or distinct. 
-                // Let's pick the first one found, as the "channel owner" block is usually near the top of the body or metadata.
-
-                // User's example: ...=s48-c-k-c0x00ffffff-no-rj
-                // We can try to force a higher res by string manipulation if we find the ID.
-
-                const rawUrl = iconMatches[0];
-                // Upgrade resolution to s900 for our OSD
+            if (ownerMatch && ownerMatch[1]) {
+                const rawUrl = ownerMatch[1];
+                // Upgrade resolution to s900
+                // Typically urls are like ...=s48-c-k... we replace the size param.
                 logoUrl = rawUrl.replace(/=s[0-9]+-/, '=s900-');
 
                 console.log(`   found avatar: ${logoUrl.substring(0, 40)}...`);
             } else {
-                console.warn('   ⚠️ Could not find yt3.ggpht.com icon on watch page.');
+                console.warn('   ⚠️ Could not find specific Owner specific avatar. Falling back to first generic match...');
+                // Fallback to old behavior if JSON structure isn't found (rare)
+                const fallbackRegex = /(https:\/\/yt3\.ggpht\.com\/[A-Za-z0-9_-]+=s[0-9]+-[^"]+)/;
+                const fallbackMatch = pageHtml.match(fallbackRegex);
+                if (fallbackMatch) {
+                    logoUrl = fallbackMatch[1].replace(/=s[0-9]+-/, '=s900-');
+                }
             }
 
             if (logoUrl) {
-                logoUrl = logoUrl.replace(/&amp;/g, '&');
+                // Remove unicode escapes if any (JSON often has \u0026 instead of &)
+                logoUrl = logoUrl.replace(/\\u0026/g, '&');
             }
 
             if (logoUrl) {

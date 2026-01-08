@@ -9,34 +9,43 @@ export const channelStore = {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 let channels = JSON.parse(stored);
-
-                // HOTFIX: Fix CTV News (ID 12) Logo if it matches the old broken one
-                const ctv = channels.find(c => c.id === 12);
-                const brokenCtvLogo = "https://yt3.googleusercontent.com/F1QF1sUtJvIrLSb4VOuDBWxeizO_WupZOf_dV9LLn47rJDpNAl8irkfBwVOnHvnuLgLt-xjVGks=s900-c-k-c0x00ffffff-no-rj";
-
-                // HOTFIX: Fix CNA (ID 11) Logo if it matches the old broken one
-                const cna = channels.find(c => c.id === 11);
-                const brokenCnaLogo = "https://yt3.googleusercontent.com/HajrUjhJTUZVTJhqsCkJxHocaB0R8TwxApCiOG6h_rgF6KyGwV6g2KMD6FTX_IMRGS8WPR4s=s900-c-k-c0x00ffffff-no-rj";
-
                 let needsSave = false;
 
-                if (ctv && ctv.logo === brokenCtvLogo) {
-                    const defaultCtv = defaultChannels.find(c => c.id === 12);
-                    if (defaultCtv) {
-                        ctv.logo = defaultCtv.logo;
-                        needsSave = true;
-                    }
-                }
+                // SYNC STRATEGY: 
+                // The 'channels.js' file (defaultChannels) is treated as the source of truth for 
+                // technical details like 'videoId' and 'logo', which might be updated by the CLI script.
+                // We preserve user customizations (order, names) but update the stream connections.
 
-                if (cna && cna.logo === brokenCnaLogo) {
-                    const defaultCna = defaultChannels.find(c => c.id === 11);
-                    if (defaultCna) {
-                        cna.logo = defaultCna.logo;
-                        needsSave = true;
+                channels = channels.map(storedChannel => {
+                    const fileChannel = defaultChannels.find(dc => dc.id === storedChannel.id);
+                    if (fileChannel) {
+                        let changed = false;
+
+                        // Sync Video ID if file is different (assumes file is newer/more correct)
+                        if (storedChannel.videoId !== fileChannel.videoId) {
+                            storedChannel.videoId = fileChannel.videoId;
+                            changed = true;
+                        }
+
+                        // Sync Logo if file is different
+                        if (storedChannel.logo !== fileChannel.logo) {
+                            storedChannel.logo = fileChannel.logo;
+                            changed = true;
+                        }
+
+                        // Sync Channel URL if file is different
+                        if (storedChannel.channelUrl !== fileChannel.channelUrl) {
+                            storedChannel.channelUrl = fileChannel.channelUrl;
+                            changed = true;
+                        }
+
+                        if (changed) needsSave = true;
                     }
-                }
+                    return storedChannel;
+                });
 
                 if (needsSave) {
+                    console.log('🔄 Synced channels with updated filesystem data');
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(channels));
                 }
 

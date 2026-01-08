@@ -6,7 +6,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@YahooFinance/live",
         category: "News",
         description: "Yahoo Finance Market Coverage",
-        logo: "https://yt3.ggpht.com/jBaMle2LFb5-02GYDHz9e3Mn-S2FUSNN2VkJOgo59_A8zq-6eQfBbI9qUHdVr05C-J8pnix-=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/F6vlBgBNGu4iFIdlZJFf_cVrSFqKTm8cvh4FpO4G4z_KH17DY55QQr4ux6umZVzdCPz_qc3A=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 2,
@@ -20,7 +20,7 @@ export const channels = [
     {
         id: 3,
         name: "Sky News",
-        videoId: "9kcysGFz_nQ",
+        videoId: "ebr5g4b2y3g",
         channelUrl: "https://www.youtube.com/@SkyNews/live",
         category: "News",
         description: "Sky News Live",
@@ -38,7 +38,7 @@ export const channels = [
     {
         id: 5,
         name: "Times Now",
-        videoId: "6X-aEXfcsLc",
+        videoId: "9zk0SaRI7FI",
         channelUrl: "https://www.youtube.com/@TimesNow/live",
         category: "News",
         description: "Times Now Live News",
@@ -47,11 +47,11 @@ export const channels = [
     {
         id: 6,
         name: "USA TODAY",
-        videoId: "BWH-oSTfwT0",
+        videoId: "guonSQszuis",
         channelUrl: "https://www.youtube.com/@USATODAY/live",
         category: "News",
         description: "USA TODAY Live News",
-        logo: "https://yt3.ggpht.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/ytc/AIdro_mpuS6J3PwGJatG2czLGfmZHyE_kNicqukg0jBnCbENmiJl=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 7,
@@ -60,16 +60,16 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@CNA/live",
         category: "News",
         description: "CNA 24/7 Live News",
-        logo: "https://yt3.ggpht.com/dD88XF-9WAis9Ox94NFpSj9JWGn6l-SklHkDn9KZuO1rFzGPZzgitLyLCqRmFYegLcSCjZF5Zw=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/ytc/AIdro_n00DzE39o-4IFJ07IP3gG__TMqKxXXbwYaARinwTXTDFM=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 8,
         name: "Forbes Breaking News",
-        videoId: "s5WtlRkp6Ks",
+        videoId: "pBRWLzw__Cs",
         channelUrl: "https://www.youtube.com/@ForbesBreakingNews/live",
         category: "News",
         description: "Forbes Breaking News Live",
-        logo: "https://yt3.ggpht.com/YWZkwxWfb4rrrqhY7utkKNRiAkCubtKUnYP3XBeyUAbanQ9skzcWnajeJ-Z8oHZuQX507Yf4Vg=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/ytc/AIdro_mQDv3YYtwrEY-oFDf_zzH-iLoSFxmjDh2GhAG5CFyMNfY=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 9,

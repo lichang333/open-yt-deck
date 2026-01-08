@@ -87,6 +87,13 @@ export const channels = [
 ];
 ```
 
+### 3. Automated Maintenance (CLI)
+To automatically update Video IDs (when streams expire) and fetch high-res logos:
+```bash
+npm run update-channels
+```
+This script uses `yt-dlp` to fetch the latest live stream ID and scrapes the watch page for the best quality channel icon.
+
 ## 💻 Tech Stack
 
 *   **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, VolumeX, Volume2, Music, Globe, Rocket, Gamepad2, GraduationCap } from 'lucide-react';
 
-const OSD = ({ channel, isVisible, isMuted, channelNumber, totalChannels }) => {
+const OSD = ({ channel, isVisible, isMuted, isLive, channelNumber, totalChannels }) => {
     return (
         <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-16 text-white overflow-hidden">
             {/* Top Bar - Channel Number & Status */}
@@ -77,9 +77,15 @@ const OSD = ({ channel, isVisible, isMuted, channelNumber, totalChannels }) => {
                             {/* Text Info */}
                             <div className="pb-2">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <span className="bg-red-600/90 text-white text-[11px] font-black px-2 py-0.5 rounded shadow-[0_0_15px_rgba(220,38,38,0.6)] tracking-widest uppercase">
-                                        LIVE
-                                    </span>
+                                    {isLive ? (
+                                        <span className="bg-red-600/90 text-white text-[11px] font-black px-2 py-0.5 rounded shadow-[0_0_15px_rgba(220,38,38,0.6)] tracking-widest uppercase flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
+                                        </span>
+                                    ) : (
+                                        <span className="bg-blue-600/90 text-white text-[11px] font-black px-2 py-0.5 rounded shadow-[0_0_15px_rgba(37,99,235,0.6)] tracking-widest uppercase">
+                                            VOD
+                                        </span>
+                                    )}
                                     <span className="text-white/60 font-medium tracking-wide uppercase text-sm flex items-center gap-2">
                                         {channel.category} <span className="w-1 h-1 bg-white/40 rounded-full"></span> HD
                                     </span>

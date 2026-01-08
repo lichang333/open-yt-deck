@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 
-const Player = ({ videoId, isMuted, onReady, onError, onBuffer, onBufferEnd }) => {
+const Player = ({ videoId, isMuted, onReady, onError, onBuffer, onBufferEnd, onDuration }) => {
     return (
         <div className="absolute inset-0 w-full h-full bg-black overflow-hidden">
             <div className="relative w-full h-full pointer-events-none"> {/* Scale to remove black bars/controls roughly */}
@@ -16,6 +16,7 @@ const Player = ({ videoId, isMuted, onReady, onError, onBuffer, onBufferEnd }) =
                     onError={onError}
                     onBuffer={onBuffer}
                     onBufferEnd={onBufferEnd}
+                    onDuration={onDuration}
                     onPlay={onBufferEnd}
                     config={{
                         playerVars: {
