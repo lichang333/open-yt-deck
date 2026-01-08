@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { channels } from './data/channels';
+import { channelStore } from './data/channelStore';
 import Player from './components/Player';
 import OSD from './components/OSD';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import ChannelManager from './components/ChannelManager';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Settings } from 'lucide-react';
+
 
 
 function App() {
+  const [channels, setChannels] = useState(() => channelStore.getChannels());
   const [currentChannelIndex, setCurrentChannelIndex] = useState(0);
   const [isOSDVisible, setIsOSDVisible] = useState(true);
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const osdTimeoutRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
@@ -59,6 +63,22 @@ function App() {
     showOSD();
   }, [showOSD]);
 
+  const jumpToChannel = useCallback((index) => {
+    if (index < 0 || index >= channels.length || index === currentChannelIndex) return;
+
+    setError(null);
+    setIsLoading(true);
+
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    loadingTimeoutRef.current = setTimeout(() => {
+      console.warn("Loading timed out - Forcing display");
+      setIsLoading(false);
+    }, 5000);
+
+    setCurrentChannelIndex(index);
+    showOSD();
+  }, [currentChannelIndex, showOSD]);
+
   const handlePlayerError = (e) => {
     console.error('Player Error', e);
     setError("Signal Lost / Stream Offline");
@@ -86,12 +106,23 @@ function App() {
   // Handle Keyboard Input
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Number keys 1-9
+      if (e.key >= '1' && e.key <= '9') {
+        const index = parseInt(e.key, 10) - 1;
+        jumpToChannel(index);
+        return;
+      }
+
       switch (e.key) {
         case 'ArrowUp':
+          changeChannel(-1);
+          break;
         case 'ArrowRight':
           changeChannel(1);
           break;
         case 'ArrowDown':
+          changeChannel(1);
+          break;
         case 'ArrowLeft':
           changeChannel(-1);
           break;
@@ -116,7 +147,23 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [changeChannel, showOSD]);
+  }, [changeChannel, showOSD, jumpToChannel]); // Added jumpToChannel to deps
+
+  // Listen for channel updates
+  useEffect(() => {
+    const handleChannelUpdate = () => {
+      setChannels(channelStore.getChannels());
+      // Ensure current index is still valid
+      setCurrentChannelIndex(prev => {
+        const newChannels = channelStore.getChannels();
+        if (prev >= newChannels.length) return 0;
+        return prev;
+      });
+    };
+
+    window.addEventListener('channel-update', handleChannelUpdate);
+    return () => window.removeEventListener('channel-update', handleChannelUpdate);
+  }, []);
 
   // Show OSD on initial load
   useEffect(() => {
@@ -175,6 +222,11 @@ function App() {
         </div>
       )}
 
+      {/* Channel Manager Overlay */}
+      {isManagerOpen && (
+        <ChannelManager onClose={() => setIsManagerOpen(false)} />
+      )}
+
       {/* Help Hint */}
       <div className={`absolute bottom-12 right-12 bg-black/90 backdrop-blur-2xl px-8 py-6 rounded-2xl border border-white/20 text-white shadow-2xl transition-all duration-500 ${isOSDVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} flex flex-col items-center gap-6 ring-1 ring-white/10 z-50`}>
 
@@ -201,6 +253,13 @@ function App() {
         {/* Bottom Section: Actions */}
         <div className="flex items-center gap-8 w-full justify-between">
 
+
+          {/* Channel Jump */}
+          <div className="flex items-center gap-3">
+            <div className="h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-xs px-3 text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">1-9</div>
+            <span className="text-[11px] font-bold tracking-wider text-white/70 uppercase">Channel</span>
+          </div>
+
           {/* Mute */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-sm text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">M</div>
@@ -218,6 +277,16 @@ function App() {
             <div className="h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-xs px-3 text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">Space</div>
             <span className="text-[11px] font-bold tracking-wider text-white/70 uppercase">Info</span>
           </div>
+
+          {/* Settings Trigger - Hidden from view but accessible via click if we added a button, strictly keeping it available via UI */}
+          <div
+            className="absolute -top-4 -right-4 bg-zinc-800 p-2 rounded-full cursor-pointer hover:bg-white hover:text-black transition shadow-lg border border-white/20"
+            onClick={() => setIsManagerOpen(true)}
+            title="Channel Manager"
+          >
+            <Settings size={16} />
+          </div>
+
         </div>
 
       </div>

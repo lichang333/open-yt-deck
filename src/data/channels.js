@@ -96,7 +96,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@CtiNews/streams",
         category: "News",
         description: "Chung Tien News Live",
-        logo: "https://yt3.googleusercontent.com/HajrUjhJTUZVTJhqsCkJxHocaB0R8TwxApCiOG6h_rgF6KyGwV6g2KMD6FTX_IMRGS8WPR4s=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/7PGt2KNBgi9Yj0EATq91tUIHl-xGBJX7mUOkt-iMTMjOuzwMBZjxhTj-YIxru3syWqyuZM3FrQ=s48-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 12,
@@ -105,7 +105,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@ctvnews/live",
         category: "News",
         description: "China Television News Live",
-        logo: "https://yt3.googleusercontent.com/F1QF1sUtJvIrLSb4VOuDBWxeizO_WupZOf_dV9LLn47rJDpNAl8irkfBwVOnHvnuLgLt-xjVGks=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/L2H1Zj71XnBJF8tr3Kpy52VhflXZYaKJC2XxeBjtGuFAcY8lZjpULhOOFI6bScWYJE56rBQ=s48-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 13,

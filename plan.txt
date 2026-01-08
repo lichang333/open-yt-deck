@@ -3,11 +3,10 @@
 
 
 新增频道:
-
+NHK World: https://www.youtube.com/watch?v=f0lYkdA-Gtw
 
 更新频道信息：
-CH 11 中视新闻HD 图标不对。 请修复。
-CH 06 USA TODAY  图标不对。 请修复。
+
 
 
 删除频道： 
@@ -15,4 +14,4 @@ CH 06 USA TODAY  图标不对。 请修复。
 
 请做一个频道排序：
 
-英文台 -> 音乐台-> 中文台 -> NASA 频道
+英文台 -> 日文台 -> 音乐台-> 中文台 -> NASA 频道

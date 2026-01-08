@@ -1,27 +1,32 @@
 # 📺 Open YT-Deck
 
-**Turn your browser into a premium TV experience.**
+**Turn your browser into a premium Broadcast TV experience.**
 
-`Open YT-Deck` is a sleek, keyboard-driven web application designed to replicate the experience of watching cable TV, powered by YouTube Live streams. It features a stunning, immersive On-Screen Display (OSD), smooth channel switching, and distraction-free viewing.
+`Open YT-Deck` is a professional-grade, keyboard-driven web application designed to replicate the experience of a master control room, powered by YouTube Live streams. It features a stunning, immersive On-Screen Display (OSD), a dedicated "Broadcast Control" manager, and distraction-free viewing.
 
 ![Preview Placeholder](docs/screenshot.png)
 
 ## ✨ Features
 
-*   **Premium TV Interface**:
+*   **📺 Premium TV Interface**:
     *   **Immersive OSD**: A glassmorphism-styled information bar shows Channel Logo, Name, Category, and Live Status.
-    *   **Dynamic Visuals**: High-contrast, easy-to-read text with drop shadows and gradients, perfect for any video background.
-    *   **Auto-Hiding**: Controls fade away automatically to keep your view unobstructed.
-*   **⌨️ Keyboard Control System**:
-    *   **`↑` / `→`**: Next Channel
-    *   **`↓` / `←`**: Previous Channel
+    *   **Dynamic Visuals**: High-contrast, easy-to-read text with drop shadows and gradients.
+    *   **Auto-Hiding**: Controls fade away automatically for a clean feed.
+
+*   **🎮 Keyboard Control System**:
+    *   **`↓` (Down)**: Next Channel
+    *   **`↑` (Up)**: Previous Channel
+    *   **`1` - `9`**: Instant Jump to Channels 1-9
     *   **`M`**: Mute / Unmute
     *   **`F`**: Toggle Fullscreen
     *   **`Space`**: Show/Hide Info (OSD)
-    *   **Number Keys (`1`-`9`)**: Quick jump to channel (if implemented)
-*   **📡 Smart Channel Management**:
-    *   **Auto-Icon Fetcher**: Built-in script automatically scrapes and updates channel logos from YouTube.
-    *   **Pre-configured Lineup**: Includes curated News, Music, and Science channels (Bloomberg, Sky News, Lofi Girl, NASA, etc.).
+
+*   **🛠️ Broadcast Control Center (Channel Manager)**:
+    *   **Drag & Drop Sorting**: Easily reorder your lineup. The first 9 slots automatically get hotkeys.
+    *   **Live Editing**: Add, edit, or delete channels directly in the browser.
+    *   **Smart Auto-Complete**: Paste a YouTube URL, and it automatically extracts the ID.
+    *   **Maintenance Guide**: Built-in instructions on how to update stream IDs when they expire.
+    *   **Data Persistence**: Your lineup is saved locally in your browser. You can also "Export" the config to share it.
 
 ## 🚀 Getting Started
 
@@ -54,40 +59,33 @@
     npm run build
     ```
 
-## 🛠 Channel Management
+## 📡 Channel Management
 
-### Adding / Editing Channels
+You can manage channels in two ways:
 
-Modify `src/data/channels.js` to manage your lineup. The structure is simple:
+### 1. The UI Way (Recommended)
+Click the **Gear Icon** (hidden in the bottom right corner) or explore the UI to open the **Broadcast Control** panel.
+- **Add**: Create new channels.
+- **Sort**: Drag channels to reorder.
+- **Save**: Persists changes to your browser's LocalStorage.
+
+### 2. The Hardcoded Way (Permanent)
+To make changes permanent for all users (e.g., if you are hosting this), modify `src/data/channels.js`:
 
 ```javascript
 export const channels = [
     {
         id: 1,
         name: "Channel Name",
-        videoId: "VIDEO_ID_HERE", // The YouTube Video ID (e.g., dQw4w9WgXcQ)
+        videoId: "VIDEO_ID_HERE", // The YouTube Video ID
         channelUrl: "https://www.youtube.com/@ChannelHandle/live",
         category: "News",
         description: "Official 24/7 Stream",
-        logo: null // Set to null to auto-fetch, or paste a URL string
+        logo: "URL_TO_LOGO_IMAGE"
     },
     // ...
 ];
 ```
-
-### 🪄 Auto-Update Channel Icons
-
-Don't waste time searching for logo URLs. We have a script for that.
-
-1.  Add your new channel to `channels.js` with `logo: null` and the correct `channelUrl`.
-2.  Run the updater:
-    ```bash
-    node scripts/update_channels.js
-    ```
-3.  The script will:
-    *   Verify if the video ID is still live.
-    *   Scrape the official high-res avatar from the YouTube channel.
-    *   Automatically update `channels.js` with the correct logo URL.
 
 ## 💻 Tech Stack
 
