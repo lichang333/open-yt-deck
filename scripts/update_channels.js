@@ -75,9 +75,10 @@ async function updateChannels() {
 
             // 1. Get Video ID (existing logic)
             // Wrap in try-catch so we don't skip icon fetching if this fails
+            let newVideoId = null;
             try {
                 const { stdout: videoIdOut } = await execAsync(`yt-dlp --print id --flat-playlist "${item.channelUrl}"`);
-                const newVideoId = videoIdOut.trim();
+                newVideoId = videoIdOut.trim();
 
                 if (!newVideoId) {
                     console.warn(`   ⚠️ Could not retrieve ID for ${item.channelUrl}`);
@@ -96,39 +97,48 @@ async function updateChannels() {
                 console.warn(`   ⚠️ ID check failed for ${item.channelUrl} (channel might be offline). Continuing to icon check...`);
             }
 
-            // 2. Get Channel Icon (New Logic)
-            // Use ROOT channel URL (remove /live, /streams) for better metadata fetching
-            const rootChannelUrl = item.channelUrl.replace(/\/live$/, '').replace(/\/streams$/, '');
-            console.log(`   ...Fetching page content from ${rootChannelUrl}`);
+            // 2. Get Channel Icon (New Logic: Fetch from Watch Page)
+            // The user pointed out the icon below the video is the correct one.
+            // So we fetch the WATCH page for the current live video, not the channel page.
+            const watchUrl = `https://www.youtube.com/watch?v=${newVideoId || item.currentVideoId}`;
+            console.log(`   ...Fetching page content from ${watchUrl}`);
 
-            // Increase buffer to 10MB to handle large YouTube pages
-            const { stdout: pageHtml } = await execAsync(`curl -s -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "${rootChannelUrl}"`, { maxBuffer: 10 * 1024 * 1024 });
+            const { stdout: pageHtml } = await execAsync(`curl -s -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "${watchUrl}"`, { maxBuffer: 10 * 1024 * 1024 });
 
-            // Try to find the avatar URL. 
             let logoUrl = null;
 
-            // Regex to find generic Avatar images
-            // We look for patterns like:
-            // src="https://yt3.ggpht.com/..."
-            // src="https://yt3.googleusercontent.com/..."
-            // content="https://yt3.googleusercontent.com/..." (og:image)
+            // Look for the specific pattern the user provided: https://yt3.ggpht.com/...=s48-...
+            // We want reasonably high res, usually s48 or s88 or s176 are available. 
+            // We'll capture the base URL and append a higher size if possible, or just grab the first match.
+            // valid patterns: 
+            // https://yt3.ggpht.com/[A-Za-z0-9_-]+=[sS][0-9]+.*
 
-            // Priority 1: og:image on the main channel page is usually the high-res avatar
-            const ogImageMatch = pageHtml.match(/<meta property="og:image" content="([^"]+)"/);
+            const iconRegex = /(https:\/\/yt3\.ggpht\.com\/[A-Za-z0-9_-]+=s[0-9]+-[^"]+)/g;
+            const iconMatches = pageHtml.match(iconRegex);
 
-            // Priority 2: Direct src match for known avatar domains
-            const avatarMatch = pageHtml.match(/src="(https:\/\/(?:yt3\.ggpht\.com|yt3\.googleusercontent\.com)\/[^"]+)"/);
+            if (iconMatches && iconMatches.length > 0) {
+                // Sort by size if possible? or just pick the first distinct one. 
+                // Usually the first one in the metadata is good.
+                // Let's filter for one that looks like a profile photo (usually square, s48/s88/s176).
 
-            if (ogImageMatch && ogImageMatch[1] && !ogImageMatch[1].includes('i.ytimg.com')) {
-                logoUrl = ogImageMatch[1];
-                console.log(`   found avatar via og:image: ${logoUrl.substring(0, 30)}...`);
-            } else if (avatarMatch && avatarMatch[1]) {
-                logoUrl = avatarMatch[1];
-                console.log(`   found avatar via src match: ${logoUrl.substring(0, 30)}...`);
+                // We'll verify it's not a comment user's avatar (which are also yt3.ggpht).
+                // The channel owner's avatar usually appears early in the metadata or strictly associated with owner JSON.
+                // However, simple scraping:
+                // The "owner" icon is usually larger or distinct. 
+                // Let's pick the first one found, as the "channel owner" block is usually near the top of the body or metadata.
+
+                // User's example: ...=s48-c-k-c0x00ffffff-no-rj
+                // We can try to force a higher res by string manipulation if we find the ID.
+
+                const rawUrl = iconMatches[0];
+                // Upgrade resolution to s900 for our OSD
+                logoUrl = rawUrl.replace(/=s[0-9]+-/, '=s900-');
+
+                console.log(`   found avatar: ${logoUrl.substring(0, 40)}...`);
+            } else {
+                console.warn('   ⚠️ Could not find yt3.ggpht.com icon on watch page.');
             }
-            // If we still have an i.ytimg.com from og:image, we ignore it or use as last resort (but user specifically wants avatar)
 
-            // Clean up: unescape any HTML entities if necessary (simple unescape)
             if (logoUrl) {
                 logoUrl = logoUrl.replace(/&amp;/g, '&');
             }

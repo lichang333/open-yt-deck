@@ -3,6 +3,7 @@ import { channelStore } from './data/channelStore';
 import Player from './components/Player';
 import OSD from './components/OSD';
 import ChannelManager from './components/ChannelManager';
+import ProgramGuide from './components/ProgramGuide';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Settings } from 'lucide-react';
 
 
@@ -12,6 +13,8 @@ function App() {
   const [currentChannelIndex, setCurrentChannelIndex] = useState(0);
   const [isOSDVisible, setIsOSDVisible] = useState(true);
   const [isManagerOpen, setIsManagerOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [guideSelectedIndex, setGuideSelectedIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const osdTimeoutRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
@@ -106,6 +109,42 @@ function App() {
   // Handle Keyboard Input
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // If Guide is Open, intercept navigation keys
+      if (isGuideOpen) {
+        switch (e.key) {
+          case 'ArrowUp':
+            setGuideSelectedIndex(prev => {
+              const next = prev - 1;
+              return next < 0 ? channels.length - 1 : next;
+            });
+            break;
+          case 'ArrowDown':
+            setGuideSelectedIndex(prev => {
+              const next = prev + 1;
+              return next >= channels.length ? 0 : next;
+            });
+            break;
+          case 'Enter':
+          case ' ':
+            jumpToChannel(guideSelectedIndex);
+            setIsGuideOpen(false);
+            break;
+          case 'Escape':
+          case 'ArrowLeft':
+            setIsGuideOpen(false);
+            break;
+          case 'g':
+          case 'G':
+            setIsGuideOpen(false);
+            break;
+          default:
+            break;
+        }
+        showOSD(); // Keep OSD awake while browsing
+        return; // Stop processing other keys
+      }
+
+      // Normal Mode Keys
       // Number keys 1-9
       if (e.key >= '1' && e.key <= '9') {
         const index = parseInt(e.key, 10) - 1;
@@ -115,13 +154,13 @@ function App() {
 
       switch (e.key) {
         case 'ArrowUp':
-          changeChannel(-1);
+          changeChannel(-1); // Up = Previous
           break;
         case 'ArrowRight':
           changeChannel(1);
           break;
         case 'ArrowDown':
-          changeChannel(1);
+          changeChannel(1); // Down = Next
           break;
         case 'ArrowLeft':
           changeChannel(-1);
@@ -140,6 +179,15 @@ function App() {
           toggleFullScreen();
           showOSD();
           break;
+        case 'g':
+        case 'G':
+          setGuideSelectedIndex(currentChannelIndex); // Sync selection to current channel when opening
+          setIsGuideOpen(true);
+          showOSD();
+          break;
+        case 'Escape':
+          setIsManagerOpen(false);
+          break;
         default:
           break;
       }
@@ -147,7 +195,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [changeChannel, showOSD, jumpToChannel]); // Added jumpToChannel to deps
+  }, [changeChannel, showOSD, jumpToChannel, isGuideOpen, guideSelectedIndex, channels, setIsGuideOpen]); // Added all dependencies
 
   // Listen for channel updates
   useEffect(() => {
@@ -227,68 +275,79 @@ function App() {
         <ChannelManager onClose={() => setIsManagerOpen(false)} />
       )}
 
-      {/* Help Hint */}
-      <div className={`absolute bottom-12 right-12 bg-black/90 backdrop-blur-2xl px-8 py-6 rounded-2xl border border-white/20 text-white shadow-2xl transition-all duration-500 ${isOSDVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} flex flex-col items-center gap-6 ring-1 ring-white/10 z-50`}>
+      {/* Program Guide Overlay */}
+      <ProgramGuide
+        isOpen={isGuideOpen}
+        channels={channels}
+        selectedIndex={guideSelectedIndex} // Use local guide selection
+        playingIndex={currentChannelIndex}
+        onSelect={(index) => {
+          jumpToChannel(index);
+          setIsGuideOpen(false);
+        }}
+        onClose={() => setIsGuideOpen(false)}
+      />
 
-        {/* Top Section: Navigation */}
-        <div className="flex items-center gap-8">
-          <span className="text-[11px] font-bold tracking-wider text-white/50 uppercase drop-shadow-sm">Navigation</span>
+      {/* Help Hint - Compact Vertical HUD */}
+      <div
+        className={`
+          absolute top-32 right-16 z-50 
+          bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-xl p-4
+          transform transition-all duration-500 origin-top-right
+          ${isOSDVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
+        `}
+      >
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] uppercase font-bold tracking-wider text-white/70">
 
-          <div className="flex flex-col gap-1.5 items-center">
-            {/* Row 1: Up Arrow */}
-            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150"><ArrowUp size={20} strokeWidth={3} /></div>
-
-            {/* Row 2: Left, Down, Right */}
-            <div className="flex gap-1.5">
-              <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150"><ArrowLeft size={20} strokeWidth={3} /></div>
-              <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150"><ArrowDown size={20} strokeWidth={3} /></div>
-              <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150"><ArrowRight size={20} strokeWidth={3} /></div>
+          {/* Col 1: Navigation */}
+          <div className="flex items-center gap-2 group">
+            <div className="flex gap-0.5">
+              <kbd className="bg-white/10 px-1.5 py-1 rounded text-white min-w-[20px] text-center border border-white/5">↑</kbd>
+              <kbd className="bg-white/10 px-1.5 py-1 rounded text-white min-w-[20px] text-center border border-white/5">↓</kbd>
             </div>
-          </div>
-        </div>
-
-        {/* Horizontal Divider */}
-        <div className="w-full h-px bg-white/10"></div>
-
-        {/* Bottom Section: Actions */}
-        <div className="flex items-center gap-8 w-full justify-between">
-
-
-          {/* Channel Jump */}
-          <div className="flex items-center gap-3">
-            <div className="h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-xs px-3 text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">1-9</div>
-            <span className="text-[11px] font-bold tracking-wider text-white/70 uppercase">Channel</span>
+            <span>Navigate</span>
           </div>
 
-          {/* Mute */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-sm text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">M</div>
-            <span className="text-[11px] font-bold tracking-wider text-white/70 uppercase">Mute</span>
+          {/* Col 2: Select */}
+          <div className="flex items-center gap-2 group">
+            <kbd className="bg-white/10 px-2 py-1 rounded text-white border border-white/5">↵</kbd>
+            <span>Select</span>
           </div>
 
-          {/* Fullscreen */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-sm text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">F</div>
-            <span className="text-[11px] font-bold tracking-wider text-white/70 uppercase">Full</span>
+          {/* Col 1: Guide */}
+          <div className="flex items-center gap-2 group">
+            <kbd className="bg-white/10 px-2 py-1 rounded text-white min-w-[24px] text-center border border-white/5">G</kbd>
+            <span>Guide</span>
           </div>
 
-          {/* Info */}
-          <div className="flex items-center gap-3">
-            <div className="h-8 rounded-md flex items-center justify-center bg-white shadow-[0_2px_0_#999] font-extrabold text-xs px-3 text-black hover:translate-y-[2px] hover:shadow-none transition-all duration-150">Space</div>
-            <span className="text-[11px] font-bold tracking-wider text-white/70 uppercase">Info</span>
+          {/* Col 2: Info */}
+          <div className="flex items-center gap-2 group">
+            <kbd className="bg-white/10 px-2 py-1 rounded text-white border border-white/5">SPC</kbd>
+            <span>Info</span>
           </div>
 
-          {/* Settings Trigger - Hidden from view but accessible via click if we added a button, strictly keeping it available via UI */}
-          <div
-            className="absolute -top-4 -right-4 bg-zinc-800 p-2 rounded-full cursor-pointer hover:bg-white hover:text-black transition shadow-lg border border-white/20"
-            onClick={() => setIsManagerOpen(true)}
-            title="Channel Manager"
-          >
-            <Settings size={16} />
+          {/* Col 1: Volume */}
+          <div className="flex items-center gap-2 group">
+            <kbd className="bg-white/10 px-2 py-1 rounded text-white min-w-[24px] text-center border border-white/5">M</kbd>
+            <span>Mute</span>
+          </div>
+
+          {/* Col 2: Fullscreen */}
+          <div className="flex items-center gap-2 group">
+            <kbd className="bg-white/10 px-2 py-1 rounded text-white min-w-[24px] text-center border border-white/5">F</kbd>
+            <span>Full</span>
           </div>
 
         </div>
 
+        {/* Hidden Settings Trigger (Accessible via mouse hover/click area if needed, but keeping visual noise low) */}
+        <div
+          className="absolute -top-2 -right-2 w-6 h-6 bg-white/5 hover:bg-white/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+          onClick={() => setIsManagerOpen(true)}
+          title="Settings"
+        >
+          <Settings size={12} className="text-white/50" />
+        </div>
       </div>
     </div>
   );

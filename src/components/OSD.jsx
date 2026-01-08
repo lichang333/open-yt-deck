@@ -4,22 +4,38 @@ import { Tv, VolumeX, Volume2, Music, Globe, Rocket, Gamepad2, GraduationCap } f
 
 const OSD = ({ channel, isVisible, isMuted, channelNumber, totalChannels }) => {
     return (
-        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-12 text-white">
-            {/* Top Bar - Channel Number/Time maybe? */}
+        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-16 text-white overflow-hidden">
+            {/* Top Bar - Channel Number & Status */}
             <AnimatePresence>
                 {isVisible && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+                        initial={{ opacity: 0, y: -40 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
+                        exit={{ opacity: 0, y: -40 }}
+                        transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                         className="flex justify-between items-start w-full"
                     >
-                        <div className="font-mono text-4xl bg-black/50 px-4 py-2 rounded backdrop-blur-md border border-white/10 shadow-lg">
-                            CH {channelNumber.toString().padStart(2, '0')}
+                        {/* Channel Badge */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-center justify-center bg-zinc-900/90 backdrop-blur-xl border border-white/10 px-5 py-3 rounded-2xl shadow-2xl">
+                                <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold mb-0.5">Channel</span>
+                                <span className="text-4xl font-black tracking-tighter text-white font-mono leading-none">
+                                    {channelNumber.toString().padStart(2, '0')}
+                                </span>
+                            </div>
                         </div>
-                        <div className="bg-black/50 p-2 rounded-full backdrop-blur-md border border-white/10">
-                            {isMuted ? <VolumeX className="w-6 h-6 text-red-400" /> : <Volume2 className="w-6 h-6 text-green-400" />}
+
+                        {/* Status Icons */}
+                        <div className="flex gap-3">
+                            {isMuted && (
+                                <div className="bg-red-500/90 text-white px-4 py-2 rounded-full backdrop-blur-md shadow-lg flex items-center gap-2 font-bold text-sm tracking-wide uppercase animate-pulse">
+                                    <VolumeX size={18} /> Muted
+                                </div>
+                            )}
+                            <div className="bg-zinc-900/80 text-zinc-400 px-4 py-2 rounded-full backdrop-blur-md border border-white/5 shadow-xl flex items-center gap-2 font-mono text-sm">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                SIGNAL OK
+                            </div>
                         </div>
                     </motion.div>
                 )}
@@ -29,48 +45,51 @@ const OSD = ({ channel, isVisible, isMuted, channelNumber, totalChannels }) => {
             <AnimatePresence>
                 {isVisible && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50 }}
+                        initial={{ opacity: 0, y: 60 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 50 }}
-                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} // Custom easing for premium feel
-                        className="flex items-center gap-8 relative z-10 pl-4 pb-4"
+                        exit={{ opacity: 0, y: 60 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 120, delay: 0.1 }}
+                        className="relative z-10 pl-6 pb-6 max-w-5xl"
                     >
-                        {/* 
-                            Premium Visibility Layer:
-                            1. Global linear gradient from bottom for base readability
-                            2. Local radial gradient behind text for extra pop
-                        */}
-                        <div className="absolute -left-20 -bottom-20 w-[150%] h-[300px] bg-gradient-to-t from-black/90 via-black/50 to-transparent -z-20 pointer-events-none" />
-                        <div className="absolute -inset-10 bg-black/40 blur-3xl rounded-full -z-10 pointer-events-none" />
+                        {/* Cinematic Gradient Background for Text Readability */}
+                        <div className="absolute -left-20 -bottom-20 w-[180%] h-[500px] bg-gradient-to-t from-black via-black/80 to-transparent -z-10 blur-2xl" />
 
-                        {/* Channel Logo with Glass Effect */}
-                        <div className="w-24 h-24 bg-white/5 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden shrink-0 ring-1 ring-white/10 group">
-                            {channel.logo ? (
-                                <img src={channel.logo} alt={channel.name} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
-                            ) : (
-                                {
-                                    'Music': <Music className="w-12 h-12 text-white/90 drop-shadow-lg" />,
-                                    'Science': <Rocket className="w-12 h-12 text-white/90 drop-shadow-lg" />,
-                                    'News': <Globe className="w-12 h-12 text-white/90 drop-shadow-lg" />,
-                                    'Gaming': <Gamepad2 className="w-12 h-12 text-white/90 drop-shadow-lg" />,
-                                    'Education': <GraduationCap className="w-12 h-12 text-white/90 drop-shadow-lg" />
-                                }[channel.category] || <Tv className="w-12 h-12 text-white/90 drop-shadow-lg" />
-                            )}
-                        </div>
+                        <div className="flex items-end gap-10">
+                            {/* Large Channel Logo - Floating Card Style */}
+                            <div className="w-32 h-32 bg-white rounded-3xl flex items-center justify-center shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] overflow-hidden shrink-0 border-4 border-white/10 relative z-20 group">
+                                {channel.logo ? (
+                                    <img src={channel.logo} alt={channel.name} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" />
+                                ) : (
+                                    <div className="text-black/20">
+                                        {
+                                            {
+                                                'Music': <Music size={48} />,
+                                                'Science': <Rocket size={48} />,
+                                                'News': <Globe size={48} />,
+                                                'Gaming': <Gamepad2 size={48} />,
+                                                'Education': <GraduationCap size={48} />
+                                            }[channel.category] || <Tv size={48} />
+                                        }
+                                    </div>
+                                )}
+                            </div>
 
-                        {/* Text Content with Multi-Layer Shadows for Maximum Readability */}
-                        <div className="flex-1 flex flex-col justify-center">
-                            <h2
-                                className="text-5xl font-bold tracking-tight text-white mb-2 leading-none"
-                                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.5)' }}
-                            >
-                                {channel.name}
-                            </h2>
-                            <div className="flex items-center gap-4 text-lg text-white font-medium">
-                                <span className="px-2 py-0.5 bg-red-600 rounded text-xs font-bold uppercase tracking-wider shadow-lg border border-white/10">LIVE</span>
-                                <span className="drop-shadow-md text-white/90">{channel.category}</span>
-                                <span className="w-1.5 h-1.5 bg-white/60 rounded-full" />
-                                <span className="truncate max-w-2xl text-white/80 drop-shadow-md">{channel.description}</span>
+                            {/* Text Info */}
+                            <div className="pb-2">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <span className="bg-red-600/90 text-white text-[11px] font-black px-2 py-0.5 rounded shadow-[0_0_15px_rgba(220,38,38,0.6)] tracking-widest uppercase">
+                                        LIVE
+                                    </span>
+                                    <span className="text-white/60 font-medium tracking-wide uppercase text-sm flex items-center gap-2">
+                                        {channel.category} <span className="w-1 h-1 bg-white/40 rounded-full"></span> HD
+                                    </span>
+                                </div>
+                                <h1 className="text-7xl font-black text-white tracking-tight leading-none drop-shadow-2xl mb-2 font-sans">
+                                    {channel.name}
+                                </h1>
+                                <p className="text-xl text-white/80 font-medium max-w-3xl line-clamp-1 drop-shadow-lg">
+                                    {channel.description}
+                                </p>
                             </div>
                         </div>
                     </motion.div>

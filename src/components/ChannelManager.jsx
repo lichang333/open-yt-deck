@@ -186,55 +186,63 @@ const ChannelManager = ({ onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col text-white">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-2xl flex flex-col text-white animate-in fade-in duration-200">
+            {/* Ambient Background Glow */}
+            <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-black/50">
+            <div className="flex items-center justify-between px-8 py-6 border-b border-white/10 bg-black/40 relative z-10 shadow-xl">
                 <div>
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-                        Broadcast Control
+                    <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                        <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_red] animate-pulse"></span>
+                        BROADCAST CONTROL
                     </h2>
-                    <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">Channel Management System</p>
+                    <p className="text-xs text-white/40 uppercase tracking-[0.2em] font-medium mt-1 ml-5">Channel Management System</p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <button onClick={() => setShowGuide(true)} title="Maintenance Guide" className="p-2 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-white transition">
-                        <BookOpen size={20} />
-                    </button>
-                    <div className="w-px h-6 bg-zinc-800 mx-1"></div>
-                    <button onClick={handleReset} title="Reset to Defaults" className="p-2 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-white transition">
-                        <RotateCcw size={20} />
-                    </button>
-                    <button onClick={handleExport} title="Copy Config" className="p-2 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-white transition">
-                        <Download size={20} />
-                    </button>
-                    <div className="w-px h-6 bg-zinc-800 mx-2"></div>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center bg-black/30 rounded-lg p-1 border border-white/5">
+                        <button onClick={() => setShowGuide(true)} title="Maintenance Guide" className="p-2 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition">
+                            <BookOpen size={20} />
+                        </button>
+                        <div className="w-px h-5 bg-white/10 mx-1"></div>
+                        <button onClick={handleReset} title="Reset to Defaults" className="p-2 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition">
+                            <RotateCcw size={20} />
+                        </button>
+                        <button onClick={handleExport} title="Copy Config" className="p-2 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition">
+                            <Download size={20} />
+                        </button>
+                    </div>
+
                     <button
                         onClick={handleSave}
                         disabled={!isDirty}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md font-bold transition ${isDirty ? 'bg-white text-black hover:scale-105' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold tracking-wide transition shadow-lg ${isDirty ? 'bg-white text-black hover:scale-105 hover:shadow-white/20' : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'}`}
                     >
                         <Save size={18} />
-                        Save Changes
+                        SAVE CHANGES
                     </button>
-                    <button onClick={onClose} className="p-2 ml-2 hover:bg-zinc-800 rounded-full transition">
+
+                    <button onClick={onClose} className="p-2.5 ml-2 hover:bg-white/10 rounded-full transition text-white/60 hover:text-white border border-transparent hover:border-white/10">
                         <X size={24} />
                     </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto p-6 relative">
+            <div className="flex-1 overflow-y-auto p-8 relative z-10">
                 {showGuide && <MaintenanceGuide onClose={() => setShowGuide(false)} />}
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-zinc-400">Active Channels ({channels.length})</h3>
-                        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-bold transition">
-                            <Plus size={18} /> Add Channel
+
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
+                        <h3 className="text-xl font-bold text-white/80">Active Channels <span className="text-white/30 text-lg ml-2 font-normal">({channels.length})</span></h3>
+                        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition shadow-lg shadow-blue-900/20 border border-blue-400/20">
+                            <Plus size={18} /> ADD CHANNEL
                         </button>
                     </div>
 
-                    <Reorder.Group axis="y" values={channels} onReorder={handleReorder}>
+                    <Reorder.Group axis="y" values={channels} onReorder={handleReorder} className="space-y-3">
                         {channels.map((channel, index) => (
                             <DraggableItem
                                 key={channel.id}
@@ -249,8 +257,9 @@ const ChannelManager = ({ onClose }) => {
                         ))}
                     </Reorder.Group>
 
-                    <div className="mt-8 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800/50 text-center text-zinc-500 text-sm">
-                        Drag items to reorder using the handle. The first 9 channels are assigned to hotkeys 1-9.
+                    <div className="mt-12 p-6 bg-white/5 rounded-xl border border-white/5 text-center text-white/40 text-sm font-medium backdrop-blur-sm">
+                        <p>Drag items to reorder using the handle on the left.</p>
+                        <p className="mt-1 opacity-70">Channels 1-9 are automatically assigned to hotkeys <kbd className="bg-black/30 px-1 rounded mx-1 border border-white/10">1</kbd>-<kbd className="bg-black/30 px-1 rounded mx-1 border border-white/10">9</kbd></p>
                     </div>
                 </div>
             </div>

@@ -2,11 +2,11 @@ export const channels = [
     {
         id: 1,
         name: "Yahoo Finance",
-        videoId: "cj3SW7JzUqA",
+        videoId: "KQp-e_XQnDE",
         channelUrl: "https://www.youtube.com/@YahooFinance/live",
         category: "News",
         description: "Yahoo Finance Market Coverage",
-        logo: "https://yt3.googleusercontent.com/F6vlBgBNGu4iFIdlZJFf_cVrSFqKTm8cvh4FpO4G4z_KH17DY55QQr4ux6umZVzdCPz_qc3A=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/jBaMle2LFb5-02GYDHz9e3Mn-S2FUSNN2VkJOgo59_A8zq-6eQfBbI9qUHdVr05C-J8pnix-=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 2,
@@ -15,16 +15,16 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@Bloomberg-News/live",
         category: "News",
         description: "Bloomberg Global Financial News",
-        logo: "https://yt3.googleusercontent.com/W4EY61Z3XtIfsGI6TjdT-EsMudJL9rhzdRyXCmOqGiCLRt4dMz9Jmn8_ApOqf-KRe3PnAM9jbSA=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/W4EY61Z3XtIfsGI6TjdT-EsMudJL9rhzdRyXCmOqGiCLRt4dMz9Jmn8_ApOqf-KRe3PnAM9jbSA=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 3,
         name: "Sky News",
-        videoId: "AIrJ9usI0gk",
+        videoId: "9kcysGFz_nQ",
         channelUrl: "https://www.youtube.com/@SkyNews/live",
         category: "News",
         description: "Sky News Live",
-        logo: "https://yt3.googleusercontent.com/dGnkztdrLtXRlzkdqReeL-NES2761xxmNVcJhGKqFpR0vQBoP9XaxnXF95FDpwrjyFr2iJvV8Es=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/dGnkztdrLtXRlzkdqReeL-NES2761xxmNVcJhGKqFpR0vQBoP9XaxnXF95FDpwrjyFr2iJvV8Es=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 4,
@@ -33,16 +33,16 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@aljazeeraenglish/live",
         category: "News",
         description: "Al Jazeera English | Live",
-        logo: "https://yt3.googleusercontent.com/TEkAt4v2DTqLiU_0pmLza5ZZndnaUXOjVuAFthuaGvwGyCYpO4H85KXOBxdMzrJ8cZu2DoECRA=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/TEkAt4v2DTqLiU_0pmLza5ZZndnaUXOjVuAFthuaGvwGyCYpO4H85KXOBxdMzrJ8cZu2DoECRA=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 5,
         name: "Times Now",
-        videoId: "-Qp2UZAOxgA",
+        videoId: "6X-aEXfcsLc",
         channelUrl: "https://www.youtube.com/@TimesNow/live",
         category: "News",
         description: "Times Now Live News",
-        logo: "https://yt3.googleusercontent.com/tbt86hlboNiJbdDEbSzJAPxcs8f_NGc9PjowG_nv932vS1TM_o1hKpQBQKlhpVDe-wg9NJFWsg=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/tbt86hlboNiJbdDEbSzJAPxcs8f_NGc9PjowG_nv932vS1TM_o1hKpQBQKlhpVDe-wg9NJFWsg=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 6,
@@ -51,7 +51,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@USATODAY/live",
         category: "News",
         description: "USA TODAY Live News",
-        logo: "https://yt3.googleusercontent.com/ytc/AIdro_mpuS6J3PwGJatG2czLGfmZHyE_kNicqukg0jBnCbENmiJl=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 7,
@@ -60,16 +60,16 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@CNA/live",
         category: "News",
         description: "CNA 24/7 Live News",
-        logo: "https://yt3.googleusercontent.com/ytc/AIdro_n00DzE39o-4IFJ07IP3gG__TMqKxXXbwYaARinwTXTDFM=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/dD88XF-9WAis9Ox94NFpSj9JWGn6l-SklHkDn9KZuO1rFzGPZzgitLyLCqRmFYegLcSCjZF5Zw=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 8,
         name: "Forbes Breaking News",
-        videoId: "W7zbzP5H_mk",
+        videoId: "s5WtlRkp6Ks",
         channelUrl: "https://www.youtube.com/@ForbesBreakingNews/live",
         category: "News",
         description: "Forbes Breaking News Live",
-        logo: "https://yt3.googleusercontent.com/ytc/AIdro_mQDv3YYtwrEY-oFDf_zzH-iLoSFxmjDh2GhAG5CFyMNfY=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/YWZkwxWfb4rrrqhY7utkKNRiAkCubtKUnYP3XBeyUAbanQ9skzcWnajeJ-Z8oHZuQX507Yf4Vg=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 9,
@@ -78,7 +78,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@LofiGirl/live",
         category: "Music",
         description: "lofi hip hop radio - beats to relax/study to",
-        logo: "https://yt3.googleusercontent.com/7rkXK4g4Lbpetl0Bz9Wd35Y-p2bPTttMn_K4seCE2JmmXPrqOSd8atpeTbLSyo1sIrlSqB-xbg=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/7rkXK4g4Lbpetl0Bz9Wd35Y-p2bPTttMn_K4seCE2JmmXPrqOSd8atpeTbLSyo1sIrlSqB-xbg=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 10,
@@ -87,7 +87,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@ttvnews/live",
         category: "News",
         description: "Taiwan Television News Live",
-        logo: "https://yt3.googleusercontent.com/ytc/AIdro_mEgK0MxLn2elBvsrt_Z40SxBwVdnbrGDqhjmwxjOYq78I=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/7PGt2KNBgi9Yj0EATq91tUIHl-xGBJX7mUOkt-iMTMjOuzwMBZjxhTj-YIxru3syWqyuZM3FrQ=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 11,
@@ -96,7 +96,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@CtiNews/streams",
         category: "News",
         description: "Chung Tien News Live",
-        logo: "https://yt3.ggpht.com/7PGt2KNBgi9Yj0EATq91tUIHl-xGBJX7mUOkt-iMTMjOuzwMBZjxhTj-YIxru3syWqyuZM3FrQ=s48-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/stUf6P7kJeOrW96ZKdaHoYvg6USCR0MOe90jfOp2oTLOdPWeQDIKNm6S25wcEzJBXuVLRNmAag=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 12,
@@ -105,7 +105,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@ctvnews/live",
         category: "News",
         description: "China Television News Live",
-        logo: "https://yt3.ggpht.com/L2H1Zj71XnBJF8tr3Kpy52VhflXZYaKJC2XxeBjtGuFAcY8lZjpULhOOFI6bScWYJE56rBQ=s48-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/L2H1Zj71XnBJF8tr3Kpy52VhflXZYaKJC2XxeBjtGuFAcY8lZjpULhOOFI6bScWYJE56rBQ=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 13,
@@ -114,7 +114,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@TVBSNEWS01/live",
         category: "News",
         description: "TVBS News Live",
-        logo: "https://yt3.googleusercontent.com/IrPD-qWFtgEr0kplk7RvA5HWJz3BLzg8mBMh9bz2lNvRSE_YgCErB7dheHcQohExnC_VCdCKnA=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/IrPD-qWFtgEr0kplk7RvA5HWJz3BLzg8mBMh9bz2lNvRSE_YgCErB7dheHcQohExnC_VCdCKnA=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 14,
@@ -141,7 +141,7 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@newsebc/live",
         category: "News",
         description: "EBC News 51 Live",
-        logo: "https://yt3.googleusercontent.com/3SP20B5NfOMGNTvAd4PkffLIHt7vA5_SrtefsCbmKBm4k4uD5JhSE2LzDsPyxWT6RP3BiW4vAA=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/3SP20B5NfOMGNTvAd4PkffLIHt7vA5_SrtefsCbmKBm4k4uD5JhSE2LzDsPyxWT6RP3BiW4vAA=s900-c-k-c0x00ffffff-no-rj"
     },
     {
         id: 17,
@@ -150,6 +150,6 @@ export const channels = [
         channelUrl: "https://www.youtube.com/@NASA/live",
         category: "Science",
         description: "Official NASA TV Live Stream",
-        logo: "https://yt3.googleusercontent.com/eIf5fNPcIcj9ig-wZBeq4stFy1lgjWTW1nLT5dYlFkHZprZ03QBiMcbpwNMB6XSBjrSFGtAGQg=s900-c-k-c0x00ffffff-no-rj"
+        logo: "https://yt3.ggpht.com/eIf5fNPcIcj9ig-wZBeq4stFy1lgjWTW1nLT5dYlFkHZprZ03QBiMcbpwNMB6XSBjrSFGtAGQg=s900-c-k-c0x00ffffff-no-rj"
     }
 ];
