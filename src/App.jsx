@@ -1,231 +1,98 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { channelStore } from './data/channelStore';
+import React, { useState, useCallback, Suspense } from 'react';
 import Player from './components/Player';
 import OSD from './components/OSD';
-import ChannelManager from './components/ChannelManager';
-import ProgramGuide from './components/ProgramGuide';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import { ChannelProvider, useChannelContext } from './context/ChannelContext';
+import { usePlayerState } from './hooks/usePlayerState';
+import { useKeyboardControls } from './hooks/useKeyboardControls';
 
-function App() {
-  const [channels, setChannels] = useState(() => channelStore.getChannels());
-  const [currentChannelIndex, setCurrentChannelIndex] = useState(0);
+// Lazy load heavy components
+const ChannelManager = React.lazy(() => import('./components/ChannelManager'));
+const ProgramGuide = React.lazy(() => import('./components/ProgramGuide'));
+
+// Loading Fallback for Lazy Components
+const LoadingOverlay = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+  </div>
+);
+
+function AppContent() {
+  // Global Channel State
+  const {
+    channels,
+    currentChannelIndex,
+    currentChannel,
+    nextChannel,
+    prevChannel,
+    jumpToChannel
+  } = useChannelContext();
+
+  // Local UI State
   const [isOSDVisible, setIsOSDVisible] = useState(true);
   const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [guideSelectedIndex, setGuideSelectedIndex] = useState(0);
-  const [isLiveStream, setIsLiveStream] = useState(true); // Default to true, update on metadata
-  const [isMuted, setIsMuted] = useState(true);
-  const osdTimeoutRef = useRef(null);
-  const loadingTimeoutRef = useRef(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Player State Hook
+  const {
+    isMuted,
+    isLiveStream,
+    isLoading,
+    error,
+    handlePlayerError,
+    handleBuffer,
+    handleBufferEnd,
+    handleDuration,
+    toggleMute,
+    resetPlayer,
+    setError,
+    setIsLoading
+  } = usePlayerState();
 
-  const currentChannel = channels[currentChannelIndex];
-
+  // OSD Timer Logic
   const showOSD = useCallback(() => {
     setIsOSDVisible(true);
-    if (osdTimeoutRef.current) clearTimeout(osdTimeoutRef.current);
-    osdTimeoutRef.current = setTimeout(() => {
-      setIsOSDVisible(false);
-    }, 4000); // Hide after 4 seconds
+    const timer = setTimeout(() => setIsOSDVisible(false), 4000);
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleFullScreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-      });
+      document.documentElement.requestFullscreen().catch(err => console.error(err));
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
+      if (document.exitFullscreen) document.exitFullscreen();
     }
   }, []);
 
-  const changeChannel = useCallback((direction) => {
-    setError(null); // Reset error on channel change
-    setIsLoading(true); // Show loading indicator
-    setIsLiveStream(true); // Default to true (Optimistic Live)
-
-    // Clear existing loading timeout
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-
-    // Set absolute timeout for loading state
-    loadingTimeoutRef.current = setTimeout(() => {
-      console.warn("Loading timed out - Forcing display");
-      setIsLoading(false);
-    }, 5000);
-
-    setCurrentChannelIndex((prev) => {
-      let next = prev + direction;
-      if (next < 0) next = channels.length - 1;
-      if (next >= channels.length) next = 0;
-      return next;
-    });
+  // Handle Channel Changes (Reset Player State)
+  const handleChannelChange = useCallback((action) => {
+    resetPlayer(); // Reset loading/error states
+    action();      // Perform navigation
     showOSD();
-  }, [showOSD]);
+  }, [resetPlayer, showOSD]);
 
-  const jumpToChannel = useCallback((index) => {
-    if (index < 0 || index >= channels.length || index === currentChannelIndex) return;
+  // Keyboard Controls Hook
+  useKeyboardControls({
+    isGuideOpen,
+    setIsGuideOpen,
+    isManagerOpen,
+    setIsManagerOpen,
+    guideSelectedIndex,
+    setGuideSelectedIndex,
+    channels,
+    currentChannelIndex,
+    actions: {
+      nextChannel: () => handleChannelChange(nextChannel),
+      prevChannel: () => handleChannelChange(prevChannel),
+      jumpToChannel: (idx) => handleChannelChange(() => jumpToChannel(idx)),
+      toggleMute,
+      toggleFullScreen,
+      showOSD
+    }
+  });
 
-    setError(null);
-    setIsLoading(true);
-    setIsLiveStream(true); // Default to true (Optimistic Live)
-
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-    loadingTimeoutRef.current = setTimeout(() => {
-      console.warn("Loading timed out - Forcing display");
-      setIsLoading(false);
-    }, 5000);
-
-    setCurrentChannelIndex(index);
-    showOSD();
-  }, [currentChannelIndex, showOSD]);
-
-  const handlePlayerError = (e) => {
-    console.error('Player Error', e);
-    setError("Signal Lost / Stream Offline");
-    setIsLoading(false);
-    showOSD();
-  };
-
-  const handleBuffer = () => {
-    setIsLoading(true);
-    // Clear existing loading timeout
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-
-    // Set absolute timeout for loading state
-    loadingTimeoutRef.current = setTimeout(() => {
-      console.warn("Buffering timed out - Forcing display");
-      setIsLoading(false);
-    }, 5000);
-  };
-
-  const handleBufferEnd = () => {
-    setIsLoading(false);
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-  };
-
-  const handleDuration = (duration) => {
-    // If duration is Infinity, it's a live stream.
-    setIsLiveStream(duration === Infinity);
-  };
-
-  // Handle Keyboard Input
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // If Guide is Open, intercept navigation keys
-      if (isGuideOpen) {
-        switch (e.key) {
-          case 'ArrowUp':
-            setGuideSelectedIndex(prev => {
-              const next = prev - 1;
-              return next < 0 ? channels.length - 1 : next;
-            });
-            break;
-          case 'ArrowDown':
-            setGuideSelectedIndex(prev => {
-              const next = prev + 1;
-              return next >= channels.length ? 0 : next;
-            });
-            break;
-          case 'Enter':
-          case ' ':
-            jumpToChannel(guideSelectedIndex);
-            setIsGuideOpen(false);
-            break;
-          case 'Escape':
-          case 'ArrowLeft':
-            setIsGuideOpen(false);
-            break;
-          case 'g':
-          case 'G':
-            setIsGuideOpen(false);
-            break;
-          default:
-            break;
-        }
-        showOSD(); // Keep OSD awake while browsing
-        return; // Stop processing other keys
-      }
-
-      // Normal Mode Keys
-      // Number keys 1-9
-      if (e.key >= '1' && e.key <= '9') {
-        const index = parseInt(e.key, 10) - 1;
-        jumpToChannel(index);
-        return;
-      }
-
-      switch (e.key) {
-        case 'ArrowUp':
-          changeChannel(-1); // Up = Previous
-          break;
-        case 'ArrowRight':
-          changeChannel(1);
-          break;
-        case 'ArrowDown':
-          changeChannel(1); // Down = Next
-          break;
-        case 'ArrowLeft':
-          changeChannel(-1);
-          break;
-        case 'm':
-        case 'M':
-          setIsMuted(prev => !prev);
-          showOSD();
-          break;
-        case 'Enter':
-        case ' ':
-          showOSD();
-          break;
-        case 'f':
-        case 'F':
-          toggleFullScreen();
-          showOSD();
-          break;
-        case 'g':
-        case 'G':
-          setGuideSelectedIndex(currentChannelIndex); // Sync selection to current channel when opening
-          setIsGuideOpen(true);
-          showOSD();
-          break;
-        case 'Escape':
-          setIsManagerOpen(false);
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [changeChannel, showOSD, jumpToChannel, isGuideOpen, guideSelectedIndex, channels, setIsGuideOpen, currentChannelIndex, toggleFullScreen]);
-
-  // Listen for channel updates
-  useEffect(() => {
-    const handleChannelUpdate = () => {
-      setChannels(channelStore.getChannels());
-      // Ensure current index is still valid
-      setCurrentChannelIndex(prev => {
-        const newChannels = channelStore.getChannels();
-        if (prev >= newChannels.length) return 0;
-        return prev;
-      });
-    };
-
-    window.addEventListener('channel-update', handleChannelUpdate);
-    return () => window.removeEventListener('channel-update', handleChannelUpdate);
-  }, []);
-
-  // Show OSD on initial load
-  useEffect(() => {
-    showOSD();
-    return () => {
-      if (osdTimeoutRef.current) clearTimeout(osdTimeoutRef.current);
-    };
-  }, [showOSD]);
+  if (!currentChannel) return <div className="bg-black h-screen text-white flex items-center justify-center">No Channels Loaded</div>;
 
   return (
     <div
@@ -234,11 +101,10 @@ function App() {
       onClick={showOSD}
     >
       <Player
-        // key removed to prevent unmounting and re-initializing the iframe
         videoId={currentChannel.videoId}
         isMuted={isMuted}
         onReady={() => console.log('Player Ready')}
-        onError={handlePlayerError}
+        onError={(e) => { handlePlayerError(e); showOSD(); }}
         onBuffer={handleBuffer}
         onBufferEnd={handleBufferEnd}
         onDuration={handleDuration}
@@ -246,7 +112,7 @@ function App() {
 
       <OSD
         channel={currentChannel}
-        isVisible={isOSDVisible || !!error} // Always show OSD if there is an error
+        isVisible={isOSDVisible || !!error}
         isMuted={isMuted}
         isLive={isLiveStream}
         channelNumber={currentChannelIndex + 1}
@@ -264,7 +130,7 @@ function App() {
         </div>
       )}
 
-      {/* Loading Indicator - Click to dismiss */}
+      {/* Loading Indicator */}
       {isLoading && !error && (
         <div
           className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer"
@@ -278,23 +144,24 @@ function App() {
         </div>
       )}
 
-      {/* Channel Manager Overlay */}
-      {isManagerOpen && (
-        <ChannelManager onClose={() => setIsManagerOpen(false)} />
-      )}
+      {/* Lazy Loaded Components */}
+      <Suspense fallback={<LoadingOverlay />}>
+        {isManagerOpen && (
+          <ChannelManager onClose={() => setIsManagerOpen(false)} />
+        )}
 
-      {/* Program Guide Overlay */}
-      <ProgramGuide
-        isOpen={isGuideOpen}
-        channels={channels}
-        selectedIndex={guideSelectedIndex} // Use local guide selection
-        playingIndex={currentChannelIndex}
-        onSelect={(index) => {
-          jumpToChannel(index);
-          setIsGuideOpen(false);
-        }}
-        onClose={() => setIsGuideOpen(false)}
-      />
+        <ProgramGuide
+          isOpen={isGuideOpen}
+          channels={channels}
+          selectedIndex={guideSelectedIndex}
+          playingIndex={currentChannelIndex}
+          onSelect={(index) => {
+            handleChannelChange(() => jumpToChannel(index));
+            setIsGuideOpen(false);
+          }}
+          onClose={() => setIsGuideOpen(false)}
+        />
+      </Suspense>
 
       {/* Help Hint - Compact Vertical HUD */}
       <div
@@ -306,8 +173,6 @@ function App() {
         `}
       >
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] uppercase font-bold tracking-wider text-white/70">
-
-          {/* Col 1: Navigation */}
           <div className="flex items-center gap-2 group">
             <div className="flex gap-0.5">
               <kbd className="bg-white/10 px-1.5 py-1 rounded text-white min-w-[20px] text-center border border-white/5">↑</kbd>
@@ -315,40 +180,28 @@ function App() {
             </div>
             <span>Navigate</span>
           </div>
-
-          {/* Col 2: Select */}
           <div className="flex items-center gap-2 group">
             <kbd className="bg-white/10 px-2 py-1 rounded text-white border border-white/5">↵</kbd>
             <span>Select</span>
           </div>
-
-          {/* Col 1: Guide */}
           <div className="flex items-center gap-2 group">
             <kbd className="bg-white/10 px-2 py-1 rounded text-white min-w-[24px] text-center border border-white/5">G</kbd>
             <span>Guide</span>
           </div>
-
-          {/* Col 2: Info */}
           <div className="flex items-center gap-2 group">
             <kbd className="bg-white/10 px-2 py-1 rounded text-white border border-white/5">SPC</kbd>
             <span>Info</span>
           </div>
-
-          {/* Col 1: Volume */}
           <div className="flex items-center gap-2 group">
             <kbd className="bg-white/10 px-2 py-1 rounded text-white min-w-[24px] text-center border border-white/5">M</kbd>
             <span>Mute</span>
           </div>
-
-          {/* Col 2: Fullscreen */}
           <div className="flex items-center gap-2 group">
             <kbd className="bg-white/10 px-2 py-1 rounded text-white min-w-[24px] text-center border border-white/5">F</kbd>
             <span>Full</span>
           </div>
-
         </div>
 
-        {/* Hidden Settings Trigger (Accessible via mouse hover/click area if needed, but keeping visual noise low) */}
         <div
           className="absolute -top-2 -right-2 w-6 h-6 bg-white/5 hover:bg-white/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
           onClick={() => setIsManagerOpen(true)}
@@ -358,6 +211,15 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Top-Level App Component
+function App() {
+  return (
+    <ChannelProvider>
+      <AppContent />
+    </ChannelProvider>
   );
 }
 

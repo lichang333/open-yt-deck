@@ -20,7 +20,7 @@ export const channels = [
     {
         id: 3,
         name: "Sky News",
-        videoId: "ebr5g4b2y3g",
+        videoId: "cmTEQLhIiiA",
         channelUrl: "https://www.youtube.com/@SkyNews/live",
         category: "News",
         description: "Sky News Live",
@@ -38,7 +38,7 @@ export const channels = [
     {
         id: 5,
         name: "Times Now",
-        videoId: "9zk0SaRI7FI",
+        videoId: "8duYqtMSs7A",
         channelUrl: "https://www.youtube.com/@TimesNow/live",
         category: "News",
         description: "Times Now Live News",
@@ -54,18 +54,9 @@ export const channels = [
         logo: "https://yt3.ggpht.com/ytc/AIdro_mpuS6J3PwGJatG2czLGfmZHyE_kNicqukg0jBnCbENmiJl=s900-c-k-c0x00ffffff-no-rj"
     },
     {
-        id: 7,
-        name: "CNA",
-        videoId: "XWq5kBlakcQ",
-        channelUrl: "https://www.youtube.com/@CNA/live",
-        category: "News",
-        description: "CNA 24/7 Live News",
-        logo: "https://yt3.ggpht.com/ytc/AIdro_n00DzE39o-4IFJ07IP3gG__TMqKxXXbwYaARinwTXTDFM=s900-c-k-c0x00ffffff-no-rj"
-    },
-    {
         id: 8,
         name: "Forbes Breaking News",
-        videoId: "pBRWLzw__Cs",
+        videoId: "ruDm8ECbu0E",
         channelUrl: "https://www.youtube.com/@ForbesBreakingNews/live",
         category: "News",
         description: "Forbes Breaking News Live",
@@ -90,15 +81,6 @@ export const channels = [
         logo: "https://yt3.ggpht.com/7PGt2KNBgi9Yj0EATq91tUIHl-xGBJX7mUOkt-iMTMjOuzwMBZjxhTj-YIxru3syWqyuZM3FrQ=s900-c-k-c0x00ffffff-no-rj"
     },
     {
-        id: 11,
-        name: "CTI News (中天)",
-        videoId: "vr3XyVCR4T0",
-        channelUrl: "https://www.youtube.com/@CtiNews/streams",
-        category: "News",
-        description: "Chung Tien News Live",
-        logo: "https://yt3.ggpht.com/stUf6P7kJeOrW96ZKdaHoYvg6USCR0MOe90jfOp2oTLOdPWeQDIKNm6S25wcEzJBXuVLRNmAag=s900-c-k-c0x00ffffff-no-rj"
-    },
-    {
         id: 12,
         name: "CTV News (中視)",
         videoId: "TCnaIE_SAtM",
@@ -110,34 +92,16 @@ export const channels = [
     {
         id: 13,
         name: "TVBS News",
-        videoId: "m95MYzrZuas",
+        videoId: "HKxduwORpG8",
         channelUrl: "https://www.youtube.com/@TVBSNEWS01/live",
         category: "News",
         description: "TVBS News Live",
         logo: "https://yt3.ggpht.com/IrPD-qWFtgEr0kplk7RvA5HWJz3BLzg8mBMh9bz2lNvRSE_YgCErB7dheHcQohExnC_VCdCKnA=s900-c-k-c0x00ffffff-no-rj"
     },
     {
-        id: 14,
-        name: "PTS News (公視)",
-        videoId: "quwqlazU-c8",
-        channelUrl: "https://www.youtube.com/@ptsnewsJ/live",
-        category: "News",
-        description: "Public Television Service News",
-        logo: null
-    },
-    {
-        id: 15,
-        name: "CTI TV (中天電視)",
-        videoId: "wdtRT5BUedg",
-        channelUrl: "https://www.youtube.com/@CtiTv/live",
-        category: "News",
-        description: "CTI Television Live",
-        logo: null
-    },
-    {
         id: 16,
         name: "EBC News (東森新聞) CH51",
-        videoId: "V1p33hqPrUk",
+        videoId: "SM07u8uCICI",
         channelUrl: "https://www.youtube.com/@newsebc/live",
         category: "News",
         description: "EBC News 51 Live",

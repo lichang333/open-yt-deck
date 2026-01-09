@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "update-channels": "node scripts/update_channels.js"
+    "refresh-channels": "node scripts/update_channels.js",
+    "add-channel": "node scripts/add_channel.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

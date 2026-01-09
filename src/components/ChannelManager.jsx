@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
-import { channelStore } from '../data/channelStore';
-import { X, GripVertical, Trash2, Plus, Save, RotateCcw, Download, BookOpen } from 'lucide-react';
+import { useChannelContext } from '../context/ChannelContext';
+import { X, GripVertical, Trash2, Plus, Save, RotateCcw, Download, BookOpen, Activity } from 'lucide-react';
 import MaintenanceGuide from './MaintenanceGuide';
 
 // DraggableItem MUST be defined OUTSIDE the parent component to prevent re-mounts on state change
-const DraggableItem = ({ channel, index, editingId, setEditingId, updateChannel, handleSmartInput, handleDelete }) => {
+const DraggableItem = ({ channel, index, editingId, setEditingId, updateChannel, handleSmartInput, handleDelete, status }) => {
     const dragControls = useDragControls();
     const isEditing = editingId === channel.id;
 
@@ -30,6 +30,22 @@ const DraggableItem = ({ channel, index, editingId, setEditingId, updateChannel,
                 {/* Index Indicator */}
                 <div className="font-mono text-xs text-zinc-500 w-6 text-center shrink-0">
                     {index < 9 ? `#${index + 1}` : ''}
+                </div>
+
+                {/* Status Indicator */}
+                <div className="flex items-center justify-center w-4" title={status ? `Status: ${status}` : "Status: Unknown"}>
+                    {status === 'checking' && (
+                        <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                    )}
+                    {status === 'online' && (
+                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                    )}
+                    {status === 'offline' && (
+                        <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+                    )}
+                    {!status && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                    )}
                 </div>
 
                 {/* Content */}
@@ -103,14 +119,22 @@ const DraggableItem = ({ channel, index, editingId, setEditingId, updateChannel,
 };
 
 const ChannelManager = ({ onClose }) => {
-    const [channels, setChannels] = useState([]);
+    // Consume Global Context
+    const { channels: allChannels, saveChannels, resetChannels, checkAllChannels, channelStatuses } = useChannelContext();
+
+    // Local state for editing (we don't want to sync every keystroke to global/localStorage until save)
+    const [channels, setChannels] = useState(allChannels);
     const [isDirty, setIsDirty] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [showGuide, setShowGuide] = useState(false);
 
+    // Sync local state if global state changes externally (e.g. reset from other source),
+    // but ONLY if we are not dirty to avoid overwriting user's unsaved work?
+    // Actually simpler to just initialize. Re-initializing on global change might disrupt work.
+    // For now, let's just assume we start with global channels.
     useEffect(() => {
-        setChannels(channelStore.getChannels());
-    }, []);
+        setChannels(allChannels);
+    }, [allChannels]);
 
     const handleReorder = (newOrder) => {
         setChannels(newOrder);
@@ -118,14 +142,14 @@ const ChannelManager = ({ onClose }) => {
     };
 
     const handleSave = () => {
-        channelStore.saveChannels(channels);
+        saveChannels(channels);
         setIsDirty(false);
         // Optional: Close manager after save or give feedback
     };
 
     const handleReset = () => {
         if (confirm('Are you sure you want to reset to default channels? This cannot be undone.')) {
-            setChannels(channelStore.resetChannels());
+            resetChannels();
             setIsDirty(false);
         }
     };
@@ -230,6 +254,10 @@ const ChannelManager = ({ onClose }) => {
 
                 <div className="flex items-center gap-4">
                     <div className="flex items-center bg-black/30 rounded-lg p-1 border border-white/5">
+                        <button onClick={checkAllChannels} title="Scan Channel Health" className="p-2 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition">
+                            <Activity size={20} />
+                        </button>
+                        <div className="w-px h-5 bg-white/10 mx-1"></div>
                         <button onClick={() => setShowGuide(true)} title="Maintenance Guide" className="p-2 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition">
                             <BookOpen size={20} />
                         </button>
@@ -280,6 +308,7 @@ const ChannelManager = ({ onClose }) => {
                                 updateChannel={updateChannel}
                                 handleSmartInput={handleSmartInput}
                                 handleDelete={handleDelete}
+                                status={channelStatuses[channel.id]}
                             />
                         ))}
                     </Reorder.Group>

@@ -73,18 +73,37 @@ async function updateChannels() {
         try {
             console.log(`   ...Fetching metadata for ${item.channelUrl}`);
 
-            // 1. Get Video ID & Channel Title
+            // 1. Get Video ID, Channel Title & Live Status
             let newVideoId = null;
             let newTitle = null;
+            let isLive = null;
 
             try {
-                // Fetch ID and Channel Title in one go using python output template? Or separate calls.
-                // --print "%(id)s::%(channel)s" 
-                const { stdout: metadataOut } = await execAsync(`yt-dlp --print "%(id)s::%(channel)s" --flat-playlist "${item.channelUrl}"`);
+                // Fetch ID, Channel Title, and Live Status
+                const { stdout: metadataOut } = await execAsync(`yt-dlp --print "%(id)s::%(channel)s::%(is_live)s" --flat-playlist "${item.channelUrl}"`);
                 const parts = metadataOut.trim().split('::');
 
                 if (parts.length >= 1) newVideoId = parts[0];
                 if (parts.length >= 2) newTitle = parts[1];
+                if (parts.length >= 3) isLive = parts[2];
+
+                // CHECK LIVE STATUS - DELETE IF NOT LIVE
+                if (isLive !== 'True') {
+                    console.log(`   🚫 Channel is NOT LIVE (Status: ${isLive || 'Unknown'}). Auto-Deleting...`);
+
+                    // Regex to match the entire channel object block for this ID
+                    // Matches whitespace, {, whitespace, id: <id>, ... content ..., }, optional comma, whitespace
+                    const deleteRegex = new RegExp(`\\s*\\{\\s*id:\\s*${item.id},[\\s\\S]*?\\},?`, 'g');
+
+                    if (deleteRegex.test(fileContent)) {
+                        fileContent = fileContent.replace(deleteRegex, '');
+                        updates++;
+                        console.log(`   🗑️  Deleted ${item.channelUrl} (ID: ${item.id})`);
+                    } else {
+                        console.warn(`   ⚠️ Could not find channel block to delete for ID ${item.id}`);
+                    }
+                    continue; // Skip remaining checks for this channel
+                }
 
                 // Update Video ID
                 if (!newVideoId) {
@@ -96,23 +115,15 @@ async function updateChannels() {
                     // But global string replace of `videoId: "VALUE"` is risky if values duplicate.
                     // Let's use the unique channelUrl as an anchor or just simpler replace if unique.
 
-                    // Specific partial limit replacement isn't easy with simple .replace.
-                    // Given our file structure is repetitive, we should generate a specific search/replace pair.
-
                     // Strategy: construct the distinct OLD substring and NEW substring
                     const oldStr = `videoId: "${item.currentVideoId}",\n        channelUrl: "${item.channelUrl}"`;
                     const newStr = `videoId: "${newVideoId}",\n        channelUrl: "${item.channelUrl}"`;
-
-                    // Fallback for "empty" video ID (different whitespace/linebreaks might exist)
-                    // If currentVideoId is empty string, regex matched `videoId: "",`
 
                     if (fileContent.includes(oldStr)) {
                         fileContent = fileContent.replace(oldStr, newStr);
                         updates++;
                     } else {
                         // Fallback: try replace based on exact regex match text?
-                        // The regex includes intervening text.
-                        // Let's use a targeted Regex for rewrite.
                         const targetRegex = new RegExp(`videoId:\\s*"${item.currentVideoId}"(,[\\s\\S]*?channelUrl:\\s*"${item.channelUrl.replace(/\//g, '\\/')}")`);
                         fileContent = fileContent.replace(targetRegex, `videoId: "${newVideoId}"$1`);
                         updates++;
@@ -123,30 +134,11 @@ async function updateChannels() {
 
                 // Update Channel Title (Name)
                 if (newTitle) {
-                    // Check if name is empty or placeholder "New Channel" or just different?
-                    // User asked for "auto complete", imply filling if missing. 
-                    // But maybe we should always sync it to official name? 
-                    // Let's autosync if current is empty OR it looks like a placeholder.
-                    // Or just always sync? User might want custom names.
-                    // Compromise: Sync if current name is empty, "New Channel", or explicitly requested.
-                    // The user request said "fill in channel title info automatically".
-                    // Let's just update it if it's different.
-
                     if (item.currentName !== newTitle && item.currentName !== "") {
-                        // If user set a custom name, do we overwrite? 
-                        // "Yahoo Finance" vs "Yahoo Finance"
-                        // Maybe only if current is empty or looks like a placeholder?
-                        // User said "automatically complete channel title", implies it wasn't there.
-                        // Let's overwrite if it's not equal to the fetched one.
+                        // logic to customize name update if needed
                     }
 
-                    if (item.currentName === "" || item.currentName === "New Channel" || item.currentName !== newTitle) {
-                        // Wait, forcing update might annoy user if they customized "Sky News UK" vs "Sky News".
-                        // Let's strict it: Only update if current is empty OR if user specifically wants full sync.
-                        // For now, let's update if it's "New Channel" OR empty.
-                        // AND let's update if the user current name is just slightly off? No.
-                        // Let's enable "Smart Fill": If name is empty string, fill it.
-
+                    if (item.currentName === "" || item.currentName === "New Channel") {
                         const shouldUpdateName = (item.currentName === "" || item.currentName === "New Channel");
 
                         if (shouldUpdateName) {
@@ -159,7 +151,31 @@ async function updateChannels() {
                 }
 
             } catch (err) {
-                console.warn(`   ⚠️ ID/Title check failed for ${item.channelUrl} (channel might be offline). Continuing to icon check...`);
+                // NEW: Handle specific error cases that imply the channel is gone
+                const errorMsg = err.stderr || err.message || "";
+                if (errorMsg.includes("Video unavailable") ||
+                    errorMsg.includes("404") ||
+                    errorMsg.includes("Not Found") ||
+                    errorMsg.includes("content is not available")) {
+
+                    console.log(`   🚫 Channel Check Failed (Offline/Deleted). Error detected. Auto-Deleting...`);
+
+                    const deleteRegex = new RegExp(`\\s*\\{\\s*id:\\s*${item.id},[\\s\\S]*?\\},?`, 'g');
+
+                    if (deleteRegex.test(fileContent)) {
+                        fileContent = fileContent.replace(deleteRegex, '');
+                        updates++;
+                        console.log(`   🗑️  Deleted ${item.channelUrl} (ID: ${item.id})`);
+                    } else {
+                        console.warn(`   ⚠️ Could not find channel block to delete for ID ${item.id}`);
+                    }
+                    continue; // Skip remaining checks for this channel
+                }
+
+                console.warn(`   ⚠️ ID/Title check failed for ${item.channelUrl} (channel might be temporarily offline or non-fatal error).`);
+                // Check if we should skip icon check too? probably.
+                // But original code continued.
+                // Let's continue for now unless it was a fatal "gone" error.
             }
 
             // 2. Get Channel Icon (New Logic: Fetch from Watch Page)

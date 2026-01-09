@@ -68,6 +68,7 @@ Click the **Gear Icon** (hidden in the bottom right corner) or explore the UI to
 - **Add**: Create new channels.
 - **Sort**: Drag channels to reorder.
 - **Save**: Persists changes to your browser's LocalStorage.
+- **Signal Health**: Clicking the "Activity" icon scans all channels. Offline channels are automatically hidden from the main view but remain visible (in red) here for maintenance.
 
 ### 2. The Hardcoded Way (Permanent)
 To make changes permanent for all users (e.g., if you are hosting this), modify `src/data/channels.js`:
@@ -88,20 +89,31 @@ export const channels = [
 ```
 
 ### 3. Automated Maintenance (CLI)
-To automatically update Video IDs (when streams expire) and fetch high-res logos:
+
+#### Refresh & Cleanup
+To automatically update Video IDs (when streams expire), fetch high-res logos, and **remove non-live channels**:
 ```bash
-npm run update-channels
+npm run refresh-channels
 ```
-This script uses `yt-dlp` to fetch the latest live stream ID and scrapes the watch page for the best quality channel icon.
+98: *Note: This script uses `yt-dlp`. It will permanently delete any channel from `src/data/channels.js` if it detects the stream is not live, or if the video/channel is unavailable (404).*
+
+#### Quick Add
+To easily add a new channel using just its YouTube URL:
+```bash
+npm run add-channel https://www.youtube.com/watch?v=VIDEO_ID
+```
+This will automatically fetch the channel name, ID, and logo, and append it to your configuration.
 
 ## 💻 Tech Stack
 
-*   **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+*   **Core**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+*   **State**: Context API + Custom Hooks
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 *   **Animations**: [Framer Motion](https://www.framer.com/motion/)
 *   **Icons**: [Lucide React](https://lucide.dev/)
 *   **Player**: [React Player](https://github.com/cookpete/react-player)
+*   **Tools**: `yt-dlp` (for metadata fetching)
 
 ## 📄 License
 
-MIT © 2024
+MIT © 2026
